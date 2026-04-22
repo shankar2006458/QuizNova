@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizNova</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;font-family:'Outfit',sans-serif;overflow:hidden}
+    body{background:#0a0a1a}
+    #app{height:100%;overflow-y:auto;overflow-x:hidden;position:relative}
+    
+    .bg-animate{
+      background:linear-gradient(135deg,#0a0a1a 0%,#0d1033 25%,#0a0a1a 50%,#1a0a2e 75%,#0a0a1a 100%);
+      background-size:400% 400%;
+      animation:bgShift 15s ease infinite;
+    }
+    @keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    
+    .glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.12)}
+    
+    .glow-blue{box-shadow:0 0 30px rgba(99,102,241,0.3),0 0 60px rgba(99,102,241,0.1)}
+    .glow-purple{box-shadow:0 0 30px rgba(168,85,247,0.3),0 0 60px rgba(168,85,247,0.1)}
+    .btn-glow{position:relative;overflow:hidden;transition:all .3s ease}
+    .btn-glow:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(99,102,241,0.4)}
+    .btn-glow::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 60%);opacity:0;transition:opacity .3s}
+    .btn-glow:hover::after{opacity:1}
+    
+    .particle{position:absolute;border-radius:50%;pointer-events:none;opacity:0.15}
+    .p1{width:300px;height:300px;background:radial-gradient(circle,rgba(99,102,241,0.4),transparent 70%);top:10%;left:-5%;animation:floatA 20s ease-in-out infinite}
+    .p2{width:250px;height:250px;background:radial-gradient(circle,rgba(168,85,247,0.4),transparent 70%);top:60%;right:-5%;animation:floatB 18s ease-in-out infinite}
+    .p3{width:200px;height:200px;background:radial-gradient(circle,rgba(59,130,246,0.3),transparent 70%);bottom:10%;left:30%;animation:floatC 22s ease-in-out infinite}
+    @keyframes floatA{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-30px)}}
+    @keyframes floatB{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,40px)}}
+    @keyframes floatC{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-50px)}}
+    
+    .timer-ring{transform:rotate(-90deg)}
+    .timer-ring circle{transition:stroke-dashoffset 1s linear,stroke .3s}
+    
+    .fade-in{animation:fadeIn .6s ease forwards}
+    .fade-up{animation:fadeUp .6s ease forwards}
+    .scale-in{animation:scaleIn .35s cubic-bezier(.175,.885,.32,1.275) forwards}
+    .slide-left{animation:slideLeft .4s ease forwards}
+    .slide-right{animation:slideRight .4s ease forwards}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+    @keyframes slideLeft{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes slideRight{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+    
+    .pulse-red{animation:pulseRed 0.5s ease infinite alternate}
+    @keyframes pulseRed{from{filter:drop-shadow(0 0 4px rgba(239,68,68,0.5))}to{filter:drop-shadow(0 0 12px rgba(239,68,68,0.9))}}
+    
+    .opt-card{transition:all .25s ease;cursor:pointer}
+    .opt-card:hover:not(.disabled){transform:translateY(-3px);border-color:rgba(99,102,241,0.5);box-shadow:0 0 20px rgba(99,102,241,0.2)}
+    .opt-card.correct{border-color:#22c55e!important;background:rgba(34,197,94,0.12)!important}
+    .opt-card.wrong{border-color:#ef4444!important;background:rgba(239,68,68,0.12)!important}
+    .opt-card.show-correct{border-color:#22c55e!important;background:rgba(34,197,94,0.08)!important}
+    .opt-card.disabled{pointer-events:none;opacity:0.7}
+    
+    .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);transform:scale(0);animation:rippleAnim .6s ease}
+    @keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+    
+    .confetti-piece{position:fixed;width:10px;height:10px;top:-10px;animation:confettiFall linear forwards;z-index:100;pointer-events:none}
+    @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110%) rotate(720deg);opacity:0}}
+    
+    #app::-webkit-scrollbar{width:6px}
+    #app::-webkit-scrollbar-track{background:transparent}
+    #app::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+    
+    #landing,#quizScreen{position:absolute;inset:0;width:100%;height:100%}
+    #landing.hidden,#quizScreen.hidden{display:none!important}
+    
+    .modal-overlay{background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+    
+    .stagger-1{animation-delay:.1s;opacity:0}
+    .stagger-2{animation-delay:.2s;opacity:0}
+    .stagger-3{animation-delay:.3s;opacity:0}
+    .stagger-4{animation-delay:.4s;opacity:0}
+    .stagger-5{animation-delay:.5s;opacity:0}
+    
+    .progress-fill{transition:width .4s ease}
+
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="bg-animate h-full w-full relative text-white">
+   <!-- Particles -->
+   <div class="particle p1"></div>
+   <div class="particle p2"></div>
+   <div class="particle p3"></div><!-- LANDING PAGE -->
+   <div id="landing" class="h-full w-full flex flex-col items-center justify-center px-4 relative z-10">
+    <div class="text-center max-w-lg w-full">
+     <!-- Logo -->
+     <div class="fade-up mb-6 flex justify-center">
+      <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center glow-blue">
+       <i data-lucide="zap" class="w-10 h-10 text-white"></i>
+      </div>
+     </div><!-- Title -->
+     <h1 id="landingTitle" class="fade-up stagger-1 text-5xl sm:text-6xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">QuizNova</h1>
+     <p id="landingSubtitle" class="fade-up stagger-2 text-gray-400 text-lg mb-10">Test your speed and knowledge</p><!-- Buttons -->
+     <div class="fade-up stagger-3 flex flex-col sm:flex-row gap-3 justify-center mb-10">
+      <button id="btnStart" onclick="showRulesModal()" class="btn-glow px-8 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-base tracking-wide">Start Quiz</button> <button id="btnQuick" onclick="quickPlay()" class="btn-glow px-8 py-3.5 rounded-2xl glass font-semibold text-base text-gray-300 hover:text-white tracking-wide">⚡ Quick Play</button>
+     </div><!-- Stats -->
+     <div class="fade-up stagger-4 grid grid-cols-3 gap-3">
+      <div class="glass rounded-2xl p-4 text-center">
+       <div class="text-2xl font-bold text-indigo-400" id="statQuestions">
+        40+
+       </div>
+       <div class="text-xs text-gray-500 mt-1">
+        Questions
+       </div>
+      </div>
+      <div class="glass rounded-2xl p-4 text-center">
+       <div class="text-2xl font-bold text-purple-400">
+        6
+       </div>
+       <div class="text-xs text-gray-500 mt-1">
+        Categories
+       </div>
+      </div>
+      <div class="glass rounded-2xl p-4 text-center">
+       <div class="text-2xl font-bold text-pink-400" id="statBest">
+        —
+       </div>
+       <div class="text-xs text-gray-500 mt-1">
+        Best Score
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- RULES MODAL -->
+   <div id="rulesModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-overlay">
+    <div class="glass-strong rounded-3xl max-w-md w-full max-h-[90%] overflow-y-auto relative scale-in" style="border-top:3px solid;border-image:linear-gradient(90deg,#6366f1,#a855f7,#ec4899) 1">
+     <button onclick="closeRulesModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+     <div class="p-6 sm:p-8">
+      <h2 class="text-2xl font-bold mb-5 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Quiz Rules</h2>
+      <div class="space-y-3 mb-6 text-sm text-gray-300">
+       <div class="flex items-start gap-3"><span class="mt-0.5 w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0"><i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-400"></i></span>15 seconds per question
+       </div>
+       <div class="flex items-start gap-3"><span class="mt-0.5 w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0"><i data-lucide="lock" class="w-3.5 h-3.5 text-purple-400"></i></span>Answer cannot be changed once selected
+       </div>
+       <div class="flex items-start gap-3"><span class="mt-0.5 w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center shrink-0"><i data-lucide="alert-circle" class="w-3.5 h-3.5 text-pink-400"></i></span>No answer recorded if timer ends
+       </div>
+       <div class="flex items-start gap-3"><span class="mt-0.5 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center shrink-0"><i data-lucide="star" class="w-3.5 h-3.5 text-green-400"></i></span>+10 points per correct answer
+       </div>
+       <div class="flex items-start gap-3"><span class="mt-0.5 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0"><i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-400"></i></span>Bonus +5 for fast answers (&lt;5s)
+       </div>
+       <div class="flex items-start gap-3"><span class="mt-0.5 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center shrink-0"><i data-lucide="eye-off" class="w-3.5 h-3.5 text-red-400"></i></span>Leaving tab pauses the quiz
+       </div>
+      </div><!-- Settings -->
+      <div class="space-y-4 mb-6">
+       <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Category</label> <select id="selCategory" class="w-full bg-slate-900/90 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"> 
+          <option value="mixed">🎲 Mixed</option> <option value="general">🧠 General Knowledge</option> <option value="coding">💻 Coding</option> <option value="movies">🎬 Movies</option> <option value="sports">⚽ Sports</option> <option value="science">🔬 Science</option> </select>
+       </div>
+       <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Difficulty</label>
+        <div class="grid grid-cols-3 gap-2" id="diffBtns">
+         <button onclick="setDiff('easy')" class="diff-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 hover:bg-green-500/20 hover:border-green-500/40 transition" data-diff="easy">Easy</button> <button onclick="setDiff('medium')" class="diff-btn py-2 rounded-xl text-sm font-medium border border-indigo-500/50 bg-indigo-500/15 text-indigo-300 transition" data-diff="medium">Medium</button> <button onclick="setDiff('hard')" class="diff-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 hover:bg-red-500/20 hover:border-red-500/40 transition" data-diff="hard">Hard</button>
+        </div>
+       </div>
+       <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Questions</label>
+        <div class="grid grid-cols-4 gap-2" id="countBtns">
+         <button onclick="setCount(5)" class="count-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 transition">5</button> <button onclick="setCount(10)" class="count-btn py-2 rounded-xl text-sm font-medium border border-indigo-500/50 bg-indigo-500/15 text-indigo-300 transition">10</button> <button onclick="setCount(15)" class="count-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 transition">15</button> <button onclick="setCount(20)" class="count-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 transition">20</button>
+        </div>
+       </div>
+      </div>
+      <div class="flex gap-3">
+       <button onclick="closeRulesModal()" class="flex-1 py-3 rounded-2xl glass text-gray-400 font-medium hover:text-white transition">Cancel</button> <button onclick="startQuiz()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold btn-glow">Continue</button>
+      </div>
+     </div>
+    </div>
+   </div><!-- QUIZ SCREEN -->
+   <div id="quizScreen" class="h-full w-full hidden flex-col relative z-10">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-4 py-3 glass-strong">
+     <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"><i data-lucide="zap" class="w-4 h-4"></i>
+      </div><span id="quizLogo" class="font-bold text-sm hidden sm:block">QuizNova</span>
+     </div>
+     <div class="flex items-center gap-3">
+      <div class="glass rounded-xl px-3 py-1.5 text-xs font-medium"><span class="text-yellow-400">⭐</span> <span id="liveScore">0</span>
+      </div>
+      <div class="glass rounded-xl px-3 py-1.5 text-xs font-medium" id="qNum">
+       1/10
+      </div><button onclick="togglePause()" class="glass rounded-xl p-2 hover:bg-white/10 transition"><i data-lucide="pause" class="w-4 h-4"></i></button>
+     </div>
+    </div><!-- Progress -->
+    <div class="w-full h-1 bg-white/5">
+     <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 progress-fill" style="width:0%"></div>
+    </div><!-- Quiz body -->
+    <div class="flex-1 overflow-y-auto flex flex-col items-center px-4 py-6">
+     <!-- Timer -->
+     <div class="relative mb-6">
+      <svg class="timer-ring w-20 h-20" viewbox="0 0 72 72">
+       <circle cx="36" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="5" /> <circle id="timerCircle" cx="36" cy="36" r="32" fill="none" stroke="#6366f1" stroke-width="5" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="0" />
+      </svg>
+      <div class="absolute inset-0 flex items-center justify-center">
+       <span id="timerText" class="text-xl font-bold">15</span>
+      </div>
+     </div><!-- Question card -->
+     <div id="questionCard" class="glass-strong rounded-3xl p-6 sm:p-8 max-w-2xl w-full mb-6">
+      <div class="flex gap-2 mb-4">
+       <span id="catBadge" class="text-xs px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-medium">General</span> <span id="diffBadge" class="text-xs px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-medium">Medium</span>
+      </div>
+      <h2 id="questionText" class="text-lg sm:text-xl font-semibold leading-relaxed mb-2">Question goes here?</h2>
+      <p id="qProgress" class="text-xs text-gray-500">Question 1 of 10</p>
+     </div><!-- Options -->
+     <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full mb-6"></div><!-- Controls -->
+     <div class="flex gap-3 max-w-2xl w-full">
+      <button id="btnSkip" onclick="skipQuestion()" class="flex-1 py-3 rounded-2xl glass text-gray-400 font-medium hover:text-white transition text-sm">Skip</button> <button id="btnNext" onclick="nextQuestion()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold btn-glow text-sm hidden">Next →</button>
+     </div>
+    </div>
+   </div><!-- PAUSE MODAL -->
+   <div id="pauseModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-overlay">
+    <div class="glass-strong rounded-3xl p-8 max-w-xs w-full text-center scale-in">
+     <div class="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center mx-auto mb-4"><i data-lucide="pause" class="w-8 h-8 text-indigo-400"></i>
+     </div>
+     <h3 class="text-xl font-bold mb-1">Paused</h3>
+     <p class="text-gray-500 text-sm mb-6">Take a breather</p>
+     <div class="space-y-2">
+      <button onclick="resumeQuiz()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold btn-glow">Resume</button> <button onclick="restartQuiz()" class="w-full py-3 rounded-2xl glass text-gray-300 font-medium hover:text-white transition">Restart</button> <button onclick="quitToHome()" class="w-full py-3 rounded-2xl glass text-gray-500 font-medium hover:text-gray-300 transition">Quit</button>
+     </div>
+    </div>
+   </div><!-- TAB WARNING -->
+   <div id="tabWarning" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-overlay">
+    <div class="glass-strong rounded-3xl p-8 max-w-xs w-full text-center scale-in">
+     <div class="w-16 h-16 rounded-2xl bg-yellow-500/20 flex items-center justify-center mx-auto mb-4"><i data-lucide="alert-triangle" class="w-8 h-8 text-yellow-400"></i>
+     </div>
+     <h3 class="text-xl font-bold mb-1">Tab Changed</h3>
+     <p class="text-gray-500 text-sm mb-6">Quiz was paused while you were away</p><button onclick="dismissTabWarning()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold btn-glow">Continue Quiz</button>
+    </div>
+   </div><!-- RESULT MODAL -->
+   <div id="resultModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-overlay">
+    <div class="glass-strong rounded-3xl max-w-sm w-full max-h-[90%] overflow-y-auto scale-in" style="border-top:3px solid;border-image:linear-gradient(90deg,#fbbf24,#f97316) 1">
+     <div class="p-6 sm:p-8">
+      <!-- Trophy -->
+      <div class="mb-6 flex justify-center">
+       <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center glow-purple">
+        <span class="text-3xl">🏆</span>
+       </div>
+      </div><!-- Title -->
+      <h2 id="resultTitle" class="text-2xl font-extrabold text-center mb-1">Amazing!</h2>
+      <p id="resultSubtitle" class="text-center text-gray-500 text-sm mb-6">Here's how you did</p><!-- Score -->
+      <div class="text-center mb-6">
+       <div class="text-4xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent" id="finalScore">
+        0
+       </div>
+       <div class="text-gray-500 text-xs">
+        points
+       </div>
+      </div><!-- Stats Grid -->
+      <div class="grid grid-cols-2 gap-2 mb-6">
+       <div class="glass rounded-2xl p-3 text-center">
+        <div class="text-lg font-bold text-green-400" id="resCorrect">
+         0
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+         Correct
+        </div>
+       </div>
+       <div class="glass rounded-2xl p-3 text-center">
+        <div class="text-lg font-bold text-red-400" id="resWrong">
+         0
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+         Wrong
+        </div>
+       </div>
+       <div class="glass rounded-2xl p-3 text-center">
+        <div class="text-lg font-bold text-gray-400" id="resSkipped">
+         0
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+         Skipped
+        </div>
+       </div>
+       <div class="glass rounded-2xl p-3 text-center">
+        <div class="text-lg font-bold text-indigo-400" id="resPercent">
+         0%
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+         Accuracy
+        </div>
+       </div>
+       <div class="glass rounded-2xl p-3 text-center">
+        <div class="text-lg font-bold text-purple-400" id="resAvgTime">
+         0s
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+         Avg Time
+        </div>
+       </div>
+       <div class="glass rounded-2xl p-3 text-center">
+        <div class="text-lg font-bold text-yellow-400" id="resStreak">
+         0
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+         Best Streak
+        </div>
+       </div>
+      </div><!-- Buttons -->
+      <div class="space-y-2">
+       <button onclick="replayQuizFromModal()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold btn-glow text-sm">Replay Quiz</button> <button onclick="homeFromModal()" class="w-full py-3 rounded-2xl glass text-gray-300 font-medium hover:text-white transition text-sm">Home</button> <button onclick="changeSettingsFromModal()" class="w-full py-3 rounded-2xl glass text-gray-500 font-medium hover:text-gray-300 transition text-sm">Change Settings</button>
+      </div>
+     </div>
+    </div>
+   </div>
+    <div class="absolute bottom-4 left-0 right-0 text-center px-4">
+      <p class="text-[11px] sm:text-xs text-gray-500">
+        Developed by ~ <span class="text-indigo-400 font-medium">Shankar Prasad Pyke</span>
+      </p>
+    </div>
+  </div>
+  <script>
+// ====================== QUESTION BANK ======================
+const ALL_QUESTIONS = [
+  // ================= GENERAL =================
+  {category:"general",difficulty:"easy",question:"What is the capital of France?",options:["Berlin","Madrid","Paris","Rome"],answer:"Paris"},
+  {category:"general",difficulty:"easy",question:"How many continents are there?",options:["5","6","7","8"],answer:"7"},
+  {category:"general",difficulty:"easy",question:"What color are emeralds?",options:["Blue","Red","Green","Yellow"],answer:"Green"},
+  {category:"general",difficulty:"easy",question:"What is the largest ocean on Earth?",options:["Atlantic","Indian","Pacific","Arctic"],answer:"Pacific"},
+  {category:"general",difficulty:"easy",question:"Which animal is known as King of Jungle?",options:["Tiger","Lion","Elephant","Wolf"],answer:"Lion"},
+  {category:"general",difficulty:"easy",question:"How many days in a week?",options:["5","6","7","8"],answer:"7"},
+
+  {category:"general",difficulty:"medium",question:"Which planet is known as the Red Planet?",options:["Venus","Mars","Jupiter","Saturn"],answer:"Mars"},
+  {category:"general",difficulty:"medium",question:"What year did Titanic sink?",options:["1910","1912","1914","1916"],answer:"1912"},
+  {category:"general",difficulty:"medium",question:"What is the hardest natural substance?",options:["Gold","Iron","Diamond","Silver"],answer:"Diamond"},
+  {category:"general",difficulty:"medium",question:"Who wrote Romeo and Juliet?",options:["Shakespeare","Dickens","Tolstoy","Homer"],answer:"Shakespeare"},
+  {category:"general",difficulty:"medium",question:"Which country gifted Statue of Liberty to USA?",options:["France","Italy","Germany","Spain"],answer:"France"},
+  {category:"general",difficulty:"medium",question:"What is currency of Japan?",options:["Won","Yuan","Yen","Dollar"],answer:"Yen"},
+
+  {category:"general",difficulty:"hard",question:"What is the smallest country in the world?",options:["Monaco","Vatican City","San Marino","Nepal"],answer:"Vatican City"},
+  {category:"general",difficulty:"hard",question:"In what year was UN founded?",options:["1940","1945","1950","1939"],answer:"1945"},
+  {category:"general",difficulty:"hard",question:"Who discovered penicillin?",options:["Newton","Darwin","Fleming","Tesla"],answer:"Fleming"},
+  {category:"general",difficulty:"hard",question:"Which desert is largest hot desert?",options:["Gobi","Kalahari","Sahara","Arabian"],answer:"Sahara"},
+  {category:"general",difficulty:"hard",question:"Which metal is liquid at room temp?",options:["Mercury","Iron","Gold","Copper"],answer:"Mercury"},
+
+  {category:"general",difficulty:"easy",question:"What is the capital of India?",options:["Mumbai","Delhi","Chennai","Kolkata"],answer:"Delhi"},
+  {category:"general",difficulty:"easy",question:"Which fruit is yellow and curved?",options:["Apple","Banana","Orange","Grapes"],answer:"Banana"},
+  {category:"general",difficulty:"easy",question:"How many legs does a spider have?",options:["6","8","10","12"],answer:"8"},
+  {category:"general",difficulty:"easy",question:"Which month comes after June?",options:["May","July","August","April"],answer:"July"},
+  {category:"general",difficulty:"easy",question:"What do bees make?",options:["Milk","Honey","Juice","Wax"],answer:"Honey"},
+  {category:"general",difficulty:"easy",question:"Which star gives Earth light?",options:["Moon","Mars","Sun","Venus"],answer:"Sun"},
+  {category:"general",difficulty:"easy",question:"How many hours are in one day?",options:["12","18","24","48"],answer:"24"},
+  {category:"general",difficulty:"easy",question:"Which body part is used for hearing?",options:["Eye","Ear","Nose","Hand"],answer:"Ear"},
+  {category:"general",difficulty:"easy",question:"Which festival is known as Festival of Colors in India?",options:["Diwali","Holi","Eid","Christmas"],answer:"Holi"},
+  {category:"general",difficulty:"easy",question:"Which animal gives us wool?",options:["Cow","Sheep","Horse","Dog"],answer:"Sheep"},
+
+  {category:"general",difficulty:"medium",question:"Who was the first President of the United States?",options:["Lincoln","Washington","Jefferson","Adams"],answer:"Washington"},
+  {category:"general",difficulty:"medium",question:"Which continent is Egypt located in?",options:["Asia","Europe","Africa","Australia"],answer:"Africa"},
+  {category:"general",difficulty:"medium",question:"What is the tallest mountain in the world?",options:["K2","Everest","Makalu","Kilimanjaro"],answer:"Everest"},
+  {category:"general",difficulty:"medium",question:"Which country is famous for the Eiffel Tower?",options:["Italy","Spain","France","Germany"],answer:"France"},
+  {category:"general",difficulty:"medium",question:"What is the currency of the USA?",options:["Euro","Dollar","Peso","Yen"],answer:"Dollar"},
+  {category:"general",difficulty:"medium",question:"Which ocean is on the east coast of the United States?",options:["Pacific","Indian","Atlantic","Arctic"],answer:"Atlantic"},
+  {category:"general",difficulty:"medium",question:"How many players are there in a cricket team?",options:["9","10","11","12"],answer:"11"},
+  {category:"general",difficulty:"medium",question:"Which country is known for pizza and pasta?",options:["France","Italy","Japan","Mexico"],answer:"Italy"},
+  {category:"general",difficulty:"medium",question:"Which gas is most abundant in Earth's atmosphere?",options:["Oxygen","Nitrogen","Carbon Dioxide","Helium"],answer:"Nitrogen"},
+  {category:"general",difficulty:"medium",question:"Who painted the Mona Lisa?",options:["Picasso","Van Gogh","Da Vinci","Michelangelo"],answer:"Da Vinci"},
+
+  {category:"general",difficulty:"hard",question:"What is the capital city of Canada?",options:["Toronto","Ottawa","Montreal","Vancouver"],answer:"Ottawa"},
+  {category:"general",difficulty:"hard",question:"Which country has the largest land area?",options:["USA","China","Russia","Canada"],answer:"Russia"},
+  {category:"general",difficulty:"hard",question:"Who wrote The Odyssey?",options:["Homer","Plato","Socrates","Virgil"],answer:"Homer"},
+  {category:"general",difficulty:"hard",question:"Which sea lies between Europe and Africa?",options:["Black Sea","Mediterranean Sea","Arabian Sea","Red Sea"],answer:"Mediterranean Sea"},
+  {category:"general",difficulty:"hard",question:"Which planet has the most known moons?",options:["Jupiter","Saturn","Mars","Neptune"],answer:"Saturn"},
+  {category:"general",difficulty:"hard",question:"Who developed the theory of relativity?",options:["Newton","Einstein","Tesla","Galileo"],answer:"Einstein"},
+  {category:"general",difficulty:"hard",question:"What is the longest river in South America?",options:["Nile","Amazon","Yangtze","Danube"],answer:"Amazon"},
+  {category:"general",difficulty:"hard",question:"Which country invented paper?",options:["India","China","Egypt","Greece"],answer:"China"},
+  {category:"general",difficulty:"hard",question:"What is the smallest prime number?",options:["1","2","3","5"],answer:"2"},
+  {category:"general",difficulty:"hard",question:"Which empire built Machu Picchu?",options:["Roman","Inca","Ottoman","Mughal"],answer:"Inca"},
+  
+  // ================= CODING =================
+  {category:"coding",difficulty:"easy",question:"What does HTML stand for?",options:["Hyper Text Markup Language","High Text Machine Language","Hyperlink Tool Markup Language","None"],answer:"Hyper Text Markup Language"},
+  {category:"coding",difficulty:"easy",question:"Which language is used for styling web pages?",options:["HTML","CSS","Python","Java"],answer:"CSS"},
+  {category:"coding",difficulty:"easy",question:"Which symbol starts JS comment?",options:["//","#","--","**"],answer:"//"},
+  {category:"coding",difficulty:"easy",question:"Which tag inserts image in HTML?",options:["img","pic","image","src"],answer:"img"},
+  {category:"coding",difficulty:"easy",question:"Which language runs in browser?",options:["Java","Python","JavaScript","C++"],answer:"JavaScript"},
+
+  {category:"coding",difficulty:"medium",question:"What does DOM stand for?",options:["Document Object Model","Data Object Model","Digital Object Map","None"],answer:"Document Object Model"},
+  {category:"coding",difficulty:"medium",question:"Which company created JavaScript?",options:["Google","Microsoft","Netscape","Apple"],answer:"Netscape"},
+  {category:"coding",difficulty:"medium",question:"typeof null returns?",options:["null","object","undefined","string"],answer:"object"},
+  {category:"coding",difficulty:"medium",question:"What does API stand for?",options:["Application Programming Interface","Applied Program Input","Auto Program Interface","None"],answer:"Application Programming Interface"},
+  {category:"coding",difficulty:"medium",question:"Which CSS property changes text color?",options:["font-color","text-style","color","shade"],answer:"color"},
+
+  {category:"coding",difficulty:"hard",question:"What is closure in JavaScript?",options:["Loop","Function with outer scope access","CSS method","Variable"],answer:"Function with outer scope access"},
+  {category:"coding",difficulty:"hard",question:"What does REST stand for?",options:["Representational State Transfer","Remote Server Tool","Random State Tech","None"],answer:"Representational State Transfer"},
+  {category:"coding",difficulty:"hard",question:"Which method converts JSON string to object?",options:["JSON.parse()","JSON.stringify()","toObject()","parseJSON()"],answer:"JSON.parse()"},
+  {category:"coding",difficulty:"hard",question:"Which keyword creates block scope variable?",options:["var","let","func","conste"],answer:"let"},
+
+  {category:"coding",difficulty:"easy",question:"Which HTML tag creates a hyperlink?",options:["link","a","href","url"],answer:"a"},
+  {category:"coding",difficulty:"easy",question:"Which brackets are used in JavaScript functions?",options:["[]","{}","()","<>"],answer:"()"},
+  {category:"coding",difficulty:"easy",question:"Which CSS property changes background color?",options:["bgcolor","background-color","color","fill"],answer:"background-color"},
+  {category:"coding",difficulty:"easy",question:"Which keyword declares a constant in JavaScript?",options:["let","const","var","fixed"],answer:"const"},
+  {category:"coding",difficulty:"easy",question:"Which symbol is used for IDs in CSS selectors?",options:[".","#","@","*"],answer:"#"},
+  {category:"coding",difficulty:"easy",question:"Which file extension is used for JavaScript?",options:[".js",".java",".py",".css"],answer:".js"},
+  {category:"coding",difficulty:"easy",question:"Which HTML tag is used for a paragraph?",options:["p","para","text","pg"],answer:"p"},
+  {category:"coding",difficulty:"easy",question:"Which operator is used for addition in JavaScript?",options:["x","+","&","add"],answer:"+"},
+  {category:"coding",difficulty:"easy",question:"Which CSS property changes font size?",options:["text-size","font-size","size","font-style"],answer:"font-size"},
+  {category:"coding",difficulty:"easy",question:"Which HTML tag creates a line break?",options:["lb","break","br","hr"],answer:"br"},
+
+  {category:"coding",difficulty:"medium",question:"Which JavaScript method writes to browser console?",options:["print()","console.log()","echo()","write()"],answer:"console.log()"},
+  {category:"coding",difficulty:"medium",question:"Which CSS display value places items in a flexible row/column?",options:["grid","flex","block","inline"],answer:"flex"},
+  {category:"coding",difficulty:"medium",question:"Which HTML attribute gives alternate text to images?",options:["title","alt","caption","name"],answer:"alt"},
+  {category:"coding",difficulty:"medium",question:"Which JavaScript method converts object to JSON string?",options:["JSON.parse()","JSON.stringify()","toJSON()","string()"],answer:"JSON.stringify()"},
+  {category:"coding",difficulty:"medium",question:"Which loop runs while condition is true?",options:["for","map","while","each"],answer:"while"},
+  {category:"coding",difficulty:"medium",question:"Which CSS property rounds element corners?",options:["corner-radius","round","border-radius","radius"],answer:"border-radius"},
+  {category:"coding",difficulty:"medium",question:"Which HTML tag is used for unordered list?",options:["ol","ul","li","list"],answer:"ul"},
+  {category:"coding",difficulty:"medium",question:"Which operator checks strict equality in JavaScript?",options:["=","==","===","!="],answer:"==="},
+  {category:"coding",difficulty:"medium",question:"Which JavaScript array method adds item to end?",options:["push()","pop()","shift()","join()"],answer:"push()"},
+  {category:"coding",difficulty:"medium",question:"Which CSS property controls spacing inside an element?",options:["margin","padding","gap","space"],answer:"padding"},
+
+  {category:"coding",difficulty:"hard",question:"Which JavaScript method removes last array item?",options:["shift()","pop()","slice()","splice()"],answer:"pop()"},
+  {category:"coding",difficulty:"hard",question:"What does SQL stand for?",options:["Structured Query Language","Simple Query Logic","System Quick Language","Sequential Query Language"],answer:"Structured Query Language"},
+  {category:"coding",difficulty:"hard",question:"Which HTTP status code means Not Found?",options:["200","301","404","500"],answer:"404"},
+  {category:"coding",difficulty:"hard",question:"Which data structure uses key-value pairs in JavaScript?",options:["Array","String","Object","Loop"],answer:"Object"},
+  {category:"coding",difficulty:"hard",question:"Which Git command uploads commits to remote repository?",options:["git add","git push","git clone","git pull"],answer:"git push"},
+  {category:"coding",difficulty:"hard",question:"Which JavaScript keyword is used with promises for error handling?",options:["throw","catch","retry","break"],answer:"catch"},
+  {category:"coding",difficulty:"hard",question:"Which CSS unit is relative to root font size?",options:["px","em","rem","vh"],answer:"rem"},
+  {category:"coding",difficulty:"hard",question:"Which method can select an element by ID in JavaScript?",options:["queryID()","getElementById()","selectId()","find()"],answer:"getElementById()"},
+  {category:"coding",difficulty:"hard",question:"Which Git command copies repository to your computer?",options:["git init","git clone","git fork","git merge"],answer:"git clone"},
+  {category:"coding",difficulty:"hard",question:"Which JavaScript function delays code execution?",options:["delay()","wait()","setTimeout()","pause()"],answer:"setTimeout()"},
+
+  // ================= MOVIES =================
+  {category:"movies",difficulty:"easy",question:"Who directed Jurassic Park?",options:["Spielberg","Cameron","Lucas","Scott"],answer:"Spielberg"},
+  {category:"movies",difficulty:"easy",question:"Highest grossing movie of all time?",options:["Titanic","Avatar","Endgame","Frozen"],answer:"Avatar"},
+  {category:"movies",difficulty:"easy",question:"Simba's father in Lion King?",options:["Scar","Mufasa","Rafiki","Zazu"],answer:"Mufasa"},
+  {category:"movies",difficulty:"easy",question:"Which hero uses shield?",options:["Thor","Batman","Captain America","Iron Man"],answer:"Captain America"},
+
+  {category:"movies",difficulty:"medium",question:"Which film won Best Picture in 2020 Oscars?",options:["1917","Parasite","Joker","Ford v Ferrari"],answer:"Parasite"},
+  {category:"movies",difficulty:"medium",question:"Who played Joker in Dark Knight?",options:["Phoenix","Ledger","Leto","Nicholson"],answer:"Ledger"},
+  {category:"movies",difficulty:"medium",question:"Which movie has blue aliens?",options:["Avatar","Titanic","Alien","Dune"],answer:"Avatar"},
+
+  {category:"movies",difficulty:"hard",question:"Stanley Kubrick's last film?",options:["The Shining","Eyes Wide Shut","2001","Clockwork Orange"],answer:"Eyes Wide Shut"},
+  {category:"movies",difficulty:"hard",question:"Quote 'Here's looking at you kid' from?",options:["Casablanca","Titanic","Citizen Kane","Psycho"],answer:"Casablanca"},
+  {category:"movies",difficulty:"hard",question:"Who directed Inception?",options:["Nolan","Spielberg","Fincher","Scott"],answer:"Nolan"},
+
+  {category:"movies",difficulty:"easy",question:"Who played Harry Potter in the film series?",options:["Daniel Radcliffe","Tom Holland","Elijah Wood","Rupert Grint"],answer:"Daniel Radcliffe"},
+  {category:"movies",difficulty:"easy",question:"Which movie features a snowman named Olaf?",options:["Moana","Frozen","Tangled","Encanto"],answer:"Frozen"},
+  {category:"movies",difficulty:"easy",question:"Who is the cowboy toy in Toy Story?",options:["Buzz","Woody","Rex","Forky"],answer:"Woody"},
+  {category:"movies",difficulty:"easy",question:"Which superhero is also known as Bruce Wayne?",options:["Batman","Superman","Iron Man","Thor"],answer:"Batman"},
+  {category:"movies",difficulty:"easy",question:"Which movie features talking cars racing?",options:["Turbo","Cars","Planes","Speed"],answer:"Cars"},
+  {category:"movies",difficulty:"easy",question:"Who lives in a pineapple under the sea in movie form too?",options:["Shrek","SpongeBob","Minion","Pooh"],answer:"SpongeBob"},
+  {category:"movies",difficulty:"easy",question:"Which movie has a green ogre as main character?",options:["Shrek","Hulk","Monster Inc","Luca"],answer:"Shrek"},
+  {category:"movies",difficulty:"easy",question:"Which wizard school appears in Harry Potter?",options:["Beauxbatons","Hogwarts","Durmstrang","Narnia"],answer:"Hogwarts"},
+  {category:"movies",difficulty:"easy",question:"Which superhero uses a hammer?",options:["Thor","Hulk","Flash","Spider-Man"],answer:"Thor"},
+  {category:"movies",difficulty:"easy",question:"Which movie features a clownfish named Nemo?",options:["Shark Tale","Finding Nemo","Rio","Madagascar"],answer:"Finding Nemo"},
+
+  {category:"movies",difficulty:"medium",question:"Who directed Titanic?",options:["Spielberg","Cameron","Nolan","Burton"],answer:"Cameron"},
+  {category:"movies",difficulty:"medium",question:"Which actor played Iron Man in the MCU?",options:["Chris Evans","Robert Downey Jr.","Chris Hemsworth","Mark Ruffalo"],answer:"Robert Downey Jr."},
+  {category:"movies",difficulty:"medium",question:"Which film says 'I am your father'?",options:["Star Wars: The Empire Strikes Back","Avatar","Matrix","Gladiator"],answer:"Star Wars: The Empire Strikes Back"},
+  {category:"movies",difficulty:"medium",question:"Which movie won Best Picture at Oscars 2021?",options:["Nomadland","Tenet","Mank","Soul"],answer:"Nomadland"},
+  {category:"movies",difficulty:"medium",question:"Who played Jack in Titanic?",options:["Brad Pitt","Leonardo DiCaprio","Matt Damon","Johnny Depp"],answer:"Leonardo DiCaprio"},
+  {category:"movies",difficulty:"medium",question:"Which movie features dreams within dreams?",options:["Interstellar","Inception","Memento","Looper"],answer:"Inception"},
+  {category:"movies",difficulty:"medium",question:"Which actor played Wolverine for many years?",options:["Hugh Jackman","Ryan Reynolds","Ben Affleck","Chris Pratt"],answer:"Hugh Jackman"},
+  {category:"movies",difficulty:"medium",question:"Which film is about a theme park with cloned dinosaurs?",options:["King Kong","Jurassic Park","Godzilla","Rampage"],answer:"Jurassic Park"},
+  {category:"movies",difficulty:"medium",question:"Who directed Avatar?",options:["James Cameron","Peter Jackson","Ridley Scott","Nolan"],answer:"James Cameron"},
+  {category:"movies",difficulty:"medium",question:"Which movie features a sinking ship romance?",options:["Pearl Harbor","Titanic","Poseidon","Jaws"],answer:"Titanic"},
+
+  {category:"movies",difficulty:"hard",question:"Who directed Pulp Fiction?",options:["Scorsese","Tarantino","Fincher","Kubrick"],answer:"Tarantino"},
+  {category:"movies",difficulty:"hard",question:"Which film won Best Picture at the 2022 Oscars?",options:["Dune","CODA","Belfast","King Richard"],answer:"CODA"},
+  {category:"movies",difficulty:"hard",question:"Who directed The Godfather?",options:["Coppola","Spielberg","Lucas","Scott"],answer:"Coppola"},
+  {category:"movies",difficulty:"hard",question:"Which movie features the line 'Say hello to my little friend'?",options:["Scarface","Heat","Casino","Goodfellas"],answer:"Scarface"},
+  {category:"movies",difficulty:"hard",question:"Who played the lead in The Matrix?",options:["Tom Cruise","Keanu Reeves","Brad Pitt","Matt Damon"],answer:"Keanu Reeves"},
+  {category:"movies",difficulty:"hard",question:"Which director made Interstellar?",options:["Nolan","Villeneuve","Fincher","Cameron"],answer:"Nolan"},
+  {category:"movies",difficulty:"hard",question:"Which film won Best Picture in 2023 Oscars?",options:["Avatar 2","Everything Everywhere All at Once","Top Gun Maverick","Elvis"],answer:"Everything Everywhere All at Once"},
+  {category:"movies",difficulty:"hard",question:"Which movie is set on the planet Pandora?",options:["Dune","Avatar","Star Wars","John Carter"],answer:"Avatar"},
+  {category:"movies",difficulty:"hard",question:"Who composed many famous scores like Inception and Gladiator?",options:["Hans Zimmer","John Williams","A.R. Rahman","Howard Shore"],answer:"Hans Zimmer"},
+  {category:"movies",difficulty:"hard",question:"Which actor played Joker in 2019's Joker?",options:["Ledger","Phoenix","Leto","Bale"],answer:"Phoenix"},
+
+  // ================= SPORTS =================
+  {category:"sports",difficulty:"easy",question:"Players in soccer team?",options:["9","10","11","12"],answer:"11"},
+  {category:"sports",difficulty:"easy",question:"Shuttlecock used in?",options:["Tennis","Badminton","Cricket","Golf"],answer:"Badminton"},
+  {category:"sports",difficulty:"easy",question:"Olympic rings count?",options:["4","5","6","7"],answer:"5"},
+  {category:"sports",difficulty:"easy",question:"Bat used in which sport?",options:["Football","Cricket","Tennis","Boxing"],answer:"Cricket"},
+
+  {category:"sports",difficulty:"medium",question:"Most FIFA World Cups?",options:["Germany","Brazil","Italy","Argentina"],answer:"Brazil"},
+  {category:"sports",difficulty:"medium",question:"Basketball hoop diameter inches?",options:["16","18","20","22"],answer:"18"},
+  {category:"sports",difficulty:"medium",question:"National sport of Japan?",options:["Karate","Sumo","Judo","Baseball"],answer:"Sumo"},
+
+  {category:"sports",difficulty:"hard",question:"Most men's Grand Slams?",options:["Federer","Nadal","Djokovic","Sampras"],answer:"Djokovic"},
+  {category:"sports",difficulty:"hard",question:"First modern Olympics year?",options:["1892","1896","1900","1904"],answer:"1896"},
+  {category:"sports",difficulty:"hard",question:"Fastest man in world (100m record holder)?",options:["Bolt","Gatlin","Lewis","Powell"],answer:"Bolt"},
+
+  {category:"sports",difficulty:"easy",question:"How many players are on a basketball team on court?",options:["4","5","6","7"],answer:"5"},
+  {category:"sports",difficulty:"easy",question:"Which sport uses a racket and net?",options:["Boxing","Badminton","Baseball","Rugby"],answer:"Badminton"},
+  {category:"sports",difficulty:"easy",question:"In which sport is a touchdown scored?",options:["Cricket","Tennis","American Football","Hockey"],answer:"American Football"},
+  {category:"sports",difficulty:"easy",question:"Which sport uses wickets?",options:["Football","Cricket","Golf","Basketball"],answer:"Cricket"},
+  {category:"sports",difficulty:"easy",question:"Which country hosts Wimbledon?",options:["USA","Australia","England","France"],answer:"England"},
+  {category:"sports",difficulty:"easy",question:"Which sport uses a puck?",options:["Ice Hockey","Baseball","Volleyball","Tennis"],answer:"Ice Hockey"},
+  {category:"sports",difficulty:"easy",question:"How many holes are in a standard golf round?",options:["9","12","18","24"],answer:"18"},
+  {category:"sports",difficulty:"easy",question:"Which sport is known as the king of sports worldwide?",options:["Cricket","Football","Basketball","Tennis"],answer:"Football"},
+  {category:"sports",difficulty:"easy",question:"Which sport uses pins and a bowling ball?",options:["Bowling","Curling","Snooker","Darts"],answer:"Bowling"},
+  {category:"sports",difficulty:"easy",question:"Which sport has a slam dunk?",options:["Volleyball","Basketball","Baseball","Tennis"],answer:"Basketball"},
+
+  {category:"sports",difficulty:"medium",question:"How many points is a touchdown worth in American football?",options:["3","6","7","9"],answer:"6"},
+  {category:"sports",difficulty:"medium",question:"Which country won the FIFA World Cup 2022?",options:["France","Brazil","Argentina","Croatia"],answer:"Argentina"},
+  {category:"sports",difficulty:"medium",question:"Which tennis tournament is played on clay?",options:["Wimbledon","US Open","Australian Open","French Open"],answer:"French Open"},
+  {category:"sports",difficulty:"medium",question:"How long is an Olympic swimming pool?",options:["25m","50m","75m","100m"],answer:"50m"},
+  {category:"sports",difficulty:"medium",question:"Which country is famous for All Blacks rugby team?",options:["Australia","South Africa","New Zealand","England"],answer:"New Zealand"},
+  {category:"sports",difficulty:"medium",question:"How many players are on a volleyball team on court?",options:["5","6","7","8"],answer:"6"},
+  {category:"sports",difficulty:"medium",question:"Which sport features a pommel horse?",options:["Gymnastics","Polo","Racing","Fencing"],answer:"Gymnastics"},
+  {category:"sports",difficulty:"medium",question:"Which country hosts the Tour de France?",options:["Italy","Spain","France","Belgium"],answer:"France"},
+  {category:"sports",difficulty:"medium",question:"Which sport uses the terms birdie and eagle?",options:["Tennis","Golf","Baseball","Cricket"],answer:"Golf"},
+  {category:"sports",difficulty:"medium",question:"How many overs are there per side in T20 cricket?",options:["10","20","30","50"],answer:"20"},
+
+  {category:"sports",difficulty:"hard",question:"Who has won the most Formula 1 world titles (tied record historically)?",options:["Schumacher","Hamilton","Vettel","Senna"],answer:"Hamilton"},
+  {category:"sports",difficulty:"hard",question:"Which nation has won the most Cricket World Cups (men, ODI)?",options:["India","Australia","England","West Indies"],answer:"Australia"},
+  {category:"sports",difficulty:"hard",question:"In which year was the first FIFA World Cup held?",options:["1926","1930","1934","1938"],answer:"1930"},
+  {category:"sports",difficulty:"hard",question:"Which boxer was known as The Greatest?",options:["Tyson","Ali","Frazier","Foreman"],answer:"Ali"},
+  {category:"sports",difficulty:"hard",question:"How many minutes is a standard football match excluding stoppage time?",options:["80","90","100","120"],answer:"90"},
+  {category:"sports",difficulty:"hard",question:"Which city hosted the 2016 Summer Olympics?",options:["Tokyo","Rio de Janeiro","London","Beijing"],answer:"Rio de Janeiro"},
+  {category:"sports",difficulty:"hard",question:"Who scored the 'Hand of God' goal?",options:["Pele","Maradona","Messi","Ronaldo"],answer:"Maradona"},
+  {category:"sports",difficulty:"hard",question:"Which country invented table tennis?",options:["China","England","Japan","USA"],answer:"England"},
+  {category:"sports",difficulty:"hard",question:"How many players are in a baseball team on the field?",options:["7","8","9","10"],answer:"9"},
+  {category:"sports",difficulty:"hard",question:"Which athlete is nicknamed the Flying Sikh?",options:["Neeraj Chopra","Milkha Singh","P.T. Usha","Kapil Dev"],answer:"Milkha Singh"},
+
+  // ================= SCIENCE =================
+  {category:"science",difficulty:"easy",question:"Chemical symbol of water?",options:["O2","CO2","H2O","NaCl"],answer:"H2O"},
+  {category:"science",difficulty:"easy",question:"Closest planet to Sun?",options:["Venus","Mercury","Earth","Mars"],answer:"Mercury"},
+  {category:"science",difficulty:"easy",question:"Plants absorb which gas?",options:["Oxygen","Nitrogen","Carbon Dioxide","Helium"],answer:"Carbon Dioxide"},
+  {category:"science",difficulty:"easy",question:"Human body pumps blood with?",options:["Liver","Heart","Brain","Lung"],answer:"Heart"},
+
+  {category:"science",difficulty:"medium",question:"Approx speed of light?",options:["300,000 km/s","150,000 km/s","500,000 km/s","100,000 km/s"],answer:"300,000 km/s"},
+  {category:"science",difficulty:"medium",question:"Atomic number 79 belongs to?",options:["Silver","Gold","Copper","Iron"],answer:"Gold"},
+  {category:"science",difficulty:"medium",question:"Powerhouse of cell?",options:["Nucleus","Mitochondria","Ribosome","Golgi"],answer:"Mitochondria"},
+
+  {category:"science",difficulty:"hard",question:"Half life of Carbon-14?",options:["5730 years","3730 years","7730 years","1730 years"],answer:"5730 years"},
+  {category:"science",difficulty:"hard",question:"Heisenberg principle relates to?",options:["Energy","Position and momentum","Gravity","Light"],answer:"Position and momentum"},
+  {category:"science",difficulty:"hard",question:"Most abundant element in universe?",options:["Helium","Hydrogen","Oxygen","Carbon"],answer:"Hydrogen"},
+
+  {category:"science",difficulty:"easy",question:"Which planet is known for its rings?",options:["Mars","Saturn","Venus","Mercury"],answer:"Saturn"},
+  {category:"science",difficulty:"easy",question:"What gas do humans breathe out?",options:["Oxygen","Carbon Dioxide","Nitrogen","Hydrogen"],answer:"Carbon Dioxide"},
+  {category:"science",difficulty:"easy",question:"How many bones are in an adult human body?",options:["106","206","306","406"],answer:"206"},
+  {category:"science",difficulty:"easy",question:"Which organ helps us think?",options:["Heart","Liver","Brain","Kidney"],answer:"Brain"},
+  {category:"science",difficulty:"easy",question:"What force pulls objects toward Earth?",options:["Magnetism","Gravity","Friction","Pressure"],answer:"Gravity"},
+  {category:"science",difficulty:"easy",question:"Which part of plant is usually underground?",options:["Leaf","Flower","Root","Fruit"],answer:"Root"},
+  {category:"science",difficulty:"easy",question:"What is frozen water called?",options:["Steam","Ice","Mist","Snow"],answer:"Ice"},
+  {category:"science",difficulty:"easy",question:"Which star is nearest to Earth?",options:["Polaris","Sun","Sirius","Moon"],answer:"Sun"},
+  {category:"science",difficulty:"easy",question:"Which vitamin is mainly gained from sunlight?",options:["Vitamin A","Vitamin B12","Vitamin C","Vitamin D"],answer:"Vitamin D"},
+  {category:"science",difficulty:"easy",question:"What is the center of an atom called?",options:["Electron","Nucleus","Shell","Core"],answer:"Nucleus"},
+
+  {category:"science",difficulty:"medium",question:"Which blood cells help fight infection?",options:["Red blood cells","White blood cells","Platelets","Plasma"],answer:"White blood cells"},
+  {category:"science",difficulty:"medium",question:"What is the boiling point of water at sea level?",options:["50°C","75°C","100°C","120°C"],answer:"100°C"},
+  {category:"science",difficulty:"medium",question:"Which planet is called the Blue Planet?",options:["Earth","Neptune","Uranus","Venus"],answer:"Earth"},
+  {category:"science",difficulty:"medium",question:"What is the chemical symbol for gold?",options:["Ag","Au","Gd","Go"],answer:"Au"},
+  {category:"science",difficulty:"medium",question:"Which scientist proposed the laws of motion?",options:["Einstein","Newton","Tesla","Galileo"],answer:"Newton"},
+  {category:"science",difficulty:"medium",question:"Which gas layer protects Earth from UV rays?",options:["Nitrogen layer","Ozone layer","Helium layer","Cloud layer"],answer:"Ozone layer"},
+  {category:"science",difficulty:"medium",question:"What type of energy is stored in food?",options:["Solar","Chemical","Nuclear","Wind"],answer:"Chemical"},
+  {category:"science",difficulty:"medium",question:"Which instrument measures temperature?",options:["Barometer","Thermometer","Hygrometer","Altimeter"],answer:"Thermometer"},
+  {category:"science",difficulty:"medium",question:"Which planet is the largest in our solar system?",options:["Earth","Jupiter","Saturn","Mars"],answer:"Jupiter"},
+  {category:"science",difficulty:"medium",question:"What is the pH of pure water?",options:["5","6","7","8"],answer:"7"},
+
+  {category:"science",difficulty:"hard",question:"Which particle has a negative charge?",options:["Proton","Neutron","Electron","Photon"],answer:"Electron"},
+  {category:"science",difficulty:"hard",question:"Who developed the theory of relativity?",options:["Newton","Einstein","Bohr","Faraday"],answer:"Einstein"},
+  {category:"science",difficulty:"hard",question:"What is the SI unit of force?",options:["Joule","Newton","Watt","Pascal"],answer:"Newton"},
+  {category:"science",difficulty:"hard",question:"Which planet rotates on its side?",options:["Mars","Uranus","Venus","Mercury"],answer:"Uranus"},
+  {category:"science",difficulty:"hard",question:"What is the hardest natural substance known?",options:["Iron","Quartz","Diamond","Granite"],answer:"Diamond"},
+  {category:"science",difficulty:"hard",question:"Which scientist discovered penicillin?",options:["Darwin","Fleming","Pasteur","Curie"],answer:"Fleming"},
+  {category:"science",difficulty:"hard",question:"What is the study of fungi called?",options:["Botany","Mycology","Zoology","Ecology"],answer:"Mycology"},
+  {category:"science",difficulty:"hard",question:"Which gas is most abundant in Earth's atmosphere?",options:["Oxygen","Nitrogen","Argon","Carbon Dioxide"],answer:"Nitrogen"},
+  {category:"science",difficulty:"hard",question:"What is the SI unit of electric current?",options:["Volt","Ampere","Ohm","Watt"],answer:"Ampere"},
+  {category:"science",difficulty:"hard",question:"Which metal is liquid at room temperature?",options:["Mercury","Aluminum","Copper","Silver"],answer:"Mercury"}
+];
+
+// ====================== STATE ======================
+let settings = { category:'mixed', difficulty:'medium', count:10 };
+let quizState = { questions:[], current:0, score:0, correct:0, wrong:0, skipped:0, streak:0, bestStreak:0, times:[], answered:false, paused:false };
+let timerState = { seconds:15, interval:null };
+
+// ====================== STORAGE ======================
+function loadStorage(){
+  try {
+    const s = localStorage.getItem('quiznova_settings');
+    if(s) settings = {...settings,...JSON.parse(s)};
+    const best = localStorage.getItem('quiznova_best');
+    if(best) document.getElementById('statBest').textContent = best;
+  } catch(e){}
+}
+
+function saveSettings(){
+  try { localStorage.setItem('quiznova_settings', JSON.stringify(settings)); } catch(e){}
+}
+
+function saveBest(score){
+  try {
+    const prev = parseInt(localStorage.getItem('quiznova_best')||'0');
+    if(score > prev){
+      localStorage.setItem('quiznova_best', String(score));
+      document.getElementById('statBest').textContent = score;
+    }
+  } catch(e){}
+}
+
+// ====================== UI NAVIGATION ======================
+function showScreen(activeId){
+  const screens = ['landing','quizScreen'];
+  screens.forEach(id=>{
+    const el = document.getElementById(id);
+    if(id === activeId){
+      el.classList.remove('hidden');
+      el.style.display = 'flex';
+      el.style.visibility = 'visible';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+    } else {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+      el.style.visibility = 'hidden';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+    }
+  });
+}
+
+// ====================== RULES MODAL ======================
+function showRulesModal(){
+  closeResultModal();
+  const m = document.getElementById('rulesModal');
+  m.classList.remove('hidden');
+  m.style.display='flex';
+  applySettingsUI();
+}
+
+function closeRulesModal(){
+  const m = document.getElementById('rulesModal');
+  m.classList.add('hidden');
+  m.style.display='';
+}
+
+function setDiff(d){
+  settings.difficulty=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>{
+    if(b.dataset.diff===d) b.className='diff-btn py-2 rounded-xl text-sm font-medium border border-indigo-500/50 bg-indigo-500/15 text-indigo-300 transition';
+    else b.className='diff-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 hover:bg-white/10 transition';
+  });
+}
+
+function setCount(c){
+  settings.count=c;
+  document.querySelectorAll('.count-btn').forEach(b=>{
+    if(parseInt(b.textContent)===c) b.className='count-btn py-2 rounded-xl text-sm font-medium border border-indigo-500/50 bg-indigo-500/15 text-indigo-300 transition';
+    else b.className='count-btn py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 hover:bg-white/10 transition';
+  });
+}
+
+function applySettingsUI(){
+  document.getElementById('selCategory').value = settings.category;
+  setDiff(settings.difficulty);
+  setCount(settings.count);
+}
+
+// ====================== QUIZ ENGINE ======================
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function prepareQuestions(){
+  settings.category = document.getElementById('selCategory').value;
+  saveSettings();
+  let pool = ALL_QUESTIONS.filter(q=>{
+    if(settings.category!=='mixed' && q.category!==settings.category) return false;
+    if(q.difficulty!==settings.difficulty) return false;
+    return true;
+  });
+  if(pool.length < settings.count){
+    settings.count = pool.length;
+  }
+  pool = pool.filter((q, i, arr) =>
+    i === arr.findIndex(item => item.question === q.question)
+  );
+  shuffle(pool);
+  return pool.slice(0, settings.count).map(q=>({...q, options:shuffle([...q.options])}));
+}
+
+function startQuiz(){
+  closeRulesModal();
+  quizState = {
+    questions:prepareQuestions(),
+    current:0,
+    score:0,
+    correct:0,
+    wrong:0,
+    skipped:0,
+    streak:0,
+    bestStreak:0,
+    times:[],
+    answered:false,
+    paused:false
+  };
+  showScreen('quizScreen');
+  renderQuestion();
+}
+
+function quickPlay(){
+  settings = {category:'mixed',difficulty:'medium',count:10};
+  quizState = {
+    questions:prepareQuestions(),
+    current:0,
+    score:0,
+    correct:0,
+    wrong:0,
+    skipped:0,
+    streak:0,
+    bestStreak:0,
+    times:[],
+    answered:false,
+    paused:false
+  };
+  showScreen('quizScreen');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = quizState.questions[quizState.current];
+  const total = quizState.questions.length;
+  quizState.answered = false;
+  document.getElementById('liveScore').textContent = quizState.score;
+  document.getElementById('qNum').textContent = `${quizState.current+1}/${total}`;
+  document.getElementById('progressBar').style.width = `${((quizState.current + 1) / total) * 100}%`;
+  document.getElementById('questionText').textContent = q.question;
+  document.getElementById('qProgress').textContent = `Question ${quizState.current+1} of ${total}`;
+  const catLabels = {general:'🧠 General',coding:'💻 Coding',movies:'🎬 Movies',sports:'⚽ Sports',science:'🔬 Science'};
+  document.getElementById('catBadge').textContent = catLabels[q.category]||q.category;
+  const diffColors = {easy:'bg-green-500/20 text-green-300',medium:'bg-purple-500/20 text-purple-300',hard:'bg-red-500/20 text-red-300'};
+  document.getElementById('diffBadge').className = `text-xs px-3 py-1 rounded-full font-medium ${diffColors[q.difficulty]}`;
+  document.getElementById('diffBadge').textContent = q.difficulty.charAt(0).toUpperCase()+q.difficulty.slice(1);
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const labels = ['A','B','C','D'];
+  q.options.forEach((opt,i)=>{
+    const div = document.createElement('div');
+    div.className = 'opt-card glass rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden';
+    div.innerHTML = `<span class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm font-bold text-gray-400 shrink-0">${labels[i]}</span><span class="text-sm font-medium">${opt}</span><span class="status-icon ml-auto hidden"></span>`;
+    div.addEventListener('click', function(e){
+      if(quizState.answered) return;
+      const rect = div.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className='ripple';
+      ripple.style.left=(e.clientX-rect.left)+'px';
+      ripple.style.top=(e.clientY-rect.top)+'px';
+      div.appendChild(ripple);
+      setTimeout(()=>ripple.remove(),600);
+      selectAnswer(opt, div);
+    });
+    grid.appendChild(div);
+  });
+  document.getElementById('btnSkip').classList.remove('hidden');
+  document.getElementById('btnNext').classList.add('hidden');
+  const card = document.getElementById('questionCard');
+  card.classList.remove('slide-left','slide-right');
+  void card.offsetWidth;
+  card.classList.add('slide-left');
+  startTimer();
+}
+
+function selectAnswer(chosen, el){
+  quizState.answered = true;
+  stopTimer();
+  const q = quizState.questions[quizState.current];
+  const elapsed = 15 - timerState.seconds;
+  quizState.times.push(elapsed);
+  const allOpts = document.querySelectorAll('.opt-card');
+  allOpts.forEach(o=>o.classList.add('disabled'));
+  if(chosen === q.answer){
+    el.classList.add('correct');
+    el.querySelector('.status-icon').innerHTML='<i data-lucide="check-circle" class="w-5 h-5 text-green-400"></i>';
+    el.querySelector('.status-icon').classList.remove('hidden');
+    quizState.correct++;
+    quizState.streak++;
+    if(quizState.streak > quizState.bestStreak) quizState.bestStreak = quizState.streak;
+    let pts = 10;
+    if(elapsed < 5) pts += 5;
+    quizState.score += pts;
+    document.getElementById('liveScore').textContent = quizState.score;
+  } else {
+    el.classList.add('wrong');
+    el.querySelector('.status-icon').innerHTML='<i data-lucide="x-circle" class="w-5 h-5 text-red-400"></i>';
+    el.querySelector('.status-icon').classList.remove('hidden');
+    quizState.wrong++;
+    quizState.streak = 0;
+    allOpts.forEach(o=>{
+      if(o.querySelector('span:nth-child(2)').textContent === q.answer){
+        o.classList.add('show-correct');
+      }
+    });
+  }
+  lucide.createIcons();
+  document.getElementById('btnSkip').classList.add('hidden');
+  document.getElementById('btnNext').classList.remove('hidden');
+}
+
+function skipQuestion(){
+  if(quizState.answered) return;
+  quizState.answered = true;
+  quizState.skipped++;
+  quizState.streak = 0;
+  quizState.times.push(15);
+  stopTimer();
+  document.querySelectorAll('.opt-card').forEach(o=>o.classList.add('disabled'));
+  const q = quizState.questions[quizState.current];
+  document.querySelectorAll('.opt-card').forEach(o=>{
+    if(o.querySelector('span:nth-child(2)').textContent===q.answer) o.classList.add('show-correct');
+  });
+  document.getElementById('btnSkip').classList.add('hidden');
+  document.getElementById('btnNext').classList.remove('hidden');
+}
+
+function nextQuestion(){
+  quizState.current++;
+  if(quizState.current >= quizState.questions.length){
+    stopTimer();
+    saveBest(quizState.score);
+    showResultModal();
+  } else {
+    renderQuestion();
+  }
+}
+
+// ====================== TIMER ======================
+function startTimer(){
+  timerState.seconds = 15;
+  updateTimerUI();
+  clearInterval(timerState.interval);
+  timerState.interval = setInterval(()=>{
+    if(quizState.paused) return;
+    timerState.seconds--;
+    updateTimerUI();
+    if(timerState.seconds <= 0){
+      clearInterval(timerState.interval);
+      if(!quizState.answered){
+        quizState.skipped++;
+        quizState.streak=0;
+        quizState.times.push(15);
+        quizState.answered=true;
+        document.querySelectorAll('.opt-card').forEach(o=>o.classList.add('disabled'));
+        const q=quizState.questions[quizState.current];
+        document.querySelectorAll('.opt-card').forEach(o=>{
+          if(o.querySelector('span:nth-child(2)').textContent===q.answer) o.classList.add('show-correct');
+        });
+        document.getElementById('btnSkip').classList.add('hidden');
+        document.getElementById('btnNext').classList.remove('hidden');
+      }
+    }
+  },1000);
+}
+
+function stopTimer(){
+  clearInterval(timerState.interval);
+
+  const ring = document.querySelector('.timer-ring');
+  const timerText = document.getElementById('timerText');
+
+  ring.classList.remove('pulse-red');
+  timerText.classList.remove('text-yellow-400','text-red-400');
+}
+
+function updateTimerUI(){
+  const s = timerState.seconds;
+  const timerText = document.getElementById('timerText');
+  const circle = document.getElementById('timerCircle');
+  const ring = document.querySelector('.timer-ring');
+
+  // Always reset styles first
+  ring.classList.remove('pulse-red');
+  timerText.classList.remove('text-yellow-400','text-red-400');
+
+  timerText.textContent = s;
+
+  const offset = 201 - (201 * s / 15);
+  circle.style.strokeDashoffset = offset;
+
+  if(s > 7){
+    circle.style.stroke = '#6366f1';
+  }
+  else if(s > 3){
+    circle.style.stroke = '#eab308';
+    timerText.classList.add('text-yellow-400');
+  }
+  else{
+    circle.style.stroke = '#ef4444';
+    timerText.classList.add('text-red-400');
+    ring.classList.add('pulse-red');
+  }
+}
+
+// ====================== PAUSE ======================
+function togglePause(){
+  quizState.paused=true;
+  closeResultModal();
+  document.getElementById('pauseModal').classList.remove('hidden');
+  document.getElementById('pauseModal').style.display='flex';
+}
+
+function resumeQuiz(){
+  quizState.paused=false;
+  document.getElementById('pauseModal').classList.add('hidden');
+  document.getElementById('pauseModal').style.display='';
+}
+
+function restartQuiz(){
+  document.getElementById('pauseModal').classList.add('hidden');
+  document.getElementById('pauseModal').style.display='';
+  closeResultModal();
+  stopTimer();
+  startQuiz();
+}
+
+function quitToHome(){
+  document.getElementById('pauseModal').classList.add('hidden');
+  document.getElementById('pauseModal').style.display='';
+  closeResultModal();
+  stopTimer();
+  showScreen('landing');
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden && document.getElementById('quizScreen').style.display==='flex' && !quizState.paused){
+    quizState.paused=true;
+    document.getElementById('tabWarning').classList.remove('hidden');
+    document.getElementById('tabWarning').style.display='flex';
+  }
+});
+
+function dismissTabWarning(){
+  document.getElementById('tabWarning').classList.add('hidden');
+  document.getElementById('tabWarning').style.display='';
+  quizState.paused=false;
+}
+
+// ====================== RESULTS ======================
+function showResultModal(){
+  const total = quizState.questions.length;
+  const pct = Math.round((quizState.correct/total)*100);
+  const avgTime = quizState.times.length ? (quizState.times.reduce((a,b)=>a+b,0)/quizState.times.length).toFixed(1) : 0;
+  
+  document.getElementById('finalScore').textContent = quizState.score;
+  document.getElementById('resCorrect').textContent = quizState.correct;
+  document.getElementById('resWrong').textContent = quizState.wrong;
+  document.getElementById('resSkipped').textContent = quizState.skipped;
+  document.getElementById('resPercent').textContent = pct+'%';
+  document.getElementById('resAvgTime').textContent = avgTime+'s';
+  document.getElementById('resStreak').textContent = quizState.bestStreak;
+  
+  if(pct>=90){document.getElementById('resultTitle').textContent='Outstanding!';document.getElementById('resultSubtitle').textContent='You absolutely crushed it';}
+  else if(pct>=70){document.getElementById('resultTitle').textContent='Great Job!';document.getElementById('resultSubtitle').textContent='Impressive performance';}
+  else if(pct>=50){document.getElementById('resultTitle').textContent='Not Bad!';document.getElementById('resultSubtitle').textContent='Room for improvement';}
+  else{document.getElementById('resultTitle').textContent='Keep Trying!';document.getElementById('resultSubtitle').textContent='Practice makes perfect';}
+  
+  const m = document.getElementById('resultModal');
+  m.classList.remove('hidden');
+  m.style.display='flex';
+  
+  if(pct>=70) spawnConfetti();
+}
+
+function closeResultModal(){
+  const m = document.getElementById('resultModal');
+  m.classList.add('hidden');
+  m.style.display='';
+}
+
+function replayQuizFromModal(){
+  closeResultModal();
+  startQuiz();
+}
+
+function homeFromModal(){
+  closeResultModal();
+  stopTimer();
+  showScreen('landing');
+}
+
+function changeSettingsFromModal(){
+  closeResultModal();
+  stopTimer();
+  showScreen('landing');
+  showRulesModal();
+}
+
+function spawnConfetti(){
+  const colors=['#6366f1','#a855f7','#ec4899','#eab308','#22c55e','#3b82f6'];
+  for(let i=0;i<40;i++){
+    const c=document.createElement('div');
+    c.className='confetti-piece';
+    c.style.left=Math.random()*100+'%';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration=(2+Math.random()*2)+'s';
+    c.style.animationDelay=(Math.random()*1)+'s';
+    c.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    c.style.width=(6+Math.random()*8)+'px';
+    c.style.height=(6+Math.random()*8)+'px';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4000);
+  }
+}
+
+// ====================== ELEMENT SDK ======================
+const defaultConfig = {
+  app_title: 'QuizNova',
+  app_subtitle: 'Test your speed and knowledge',
+  start_button_text: 'Start Quiz',
+  quick_play_text: '⚡ Quick Play',
+  background_color: '#0a0a1a',
+  surface_color: '#ffffff0a',
+  text_color: '#e2e8f0',
+  primary_action_color: '#6366f1',
+  secondary_action_color: '#a855f7',
+  font_family: 'Outfit',
+  font_size: 16
+};
+
+function applyConfig(cfg){
+  const t = cfg.app_title || defaultConfig.app_title;
+  const s = cfg.app_subtitle || defaultConfig.app_subtitle;
+  const sb = cfg.start_button_text || defaultConfig.start_button_text;
+  const qp = cfg.quick_play_text || defaultConfig.quick_play_text;
+  const font = cfg.font_family || defaultConfig.font_family;
+  const bg = cfg.background_color || defaultConfig.background_color;
+  const txt = cfg.text_color || defaultConfig.text_color;
+  const pri = cfg.primary_action_color || defaultConfig.primary_action_color;
+  const sec = cfg.secondary_action_color || defaultConfig.secondary_action_color;
+  const surf = cfg.surface_color || defaultConfig.surface_color;
+  const fs = cfg.font_size || defaultConfig.font_size;
+  
+  document.getElementById('landingTitle').textContent = t;
+  document.getElementById('landingSubtitle').textContent = s;
+  document.getElementById('btnStart').textContent = sb;
+  document.getElementById('btnQuick').textContent = qp;
+  document.getElementById('quizLogo').textContent = t;
+  document.body.style.fontFamily = `${font}, Outfit, sans-serif`;
+  document.body.style.fontSize = fs + 'px';
+  document.body.style.background = bg;
+  document.body.style.color = txt;
+  document.documentElement.style.setProperty('--pri', pri);
+  document.documentElement.style.setProperty('--sec', sec);
+  document.querySelectorAll('.bg-gradient-to-r.from-indigo-600.to-purple-600').forEach(el=>{
+    el.style.background = `linear-gradient(to right, ${pri}, ${sec})`;
+  });
+}
+
+// ====================== INIT ======================
+loadStorage();
+showScreen('landing');
+lucide.createIcons();
+</script>
+</html>
